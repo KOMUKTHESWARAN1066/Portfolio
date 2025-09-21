@@ -97,44 +97,59 @@ window.addEventListener('scroll', () => {
     }
 });
 
-// Contact form handling
-const contactForm = document.getElementById('contact-form');
-contactForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    // Get form data
-    const formData = new FormData(this);
-    const name = formData.get('name');
-    const email = formData.get('email');
-    const subject = formData.get('subject');
-    const message = formData.get('message');
-    
-    // Simple validation
-    if (!name || !email || !subject || !message) {
-        alert('Please fill in all fields');
-        return;
-    }
-    
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-        alert('Please enter a valid email address');
-        return;
-    }
-    
-    // Simulate form submission (replace with actual form handling)
-    const submitBtn = this.querySelector('button[type="submit"]');
-    const originalText = submitBtn.textContent;
-    submitBtn.textContent = 'Sending...';
-    submitBtn.disabled = true;
-    
-    setTimeout(() => {
-        alert('Thank you for your message! I will get back to you soon.');
-        this.reset();
-        submitBtn.textContent = originalText;
-        submitBtn.disabled = false;
-    }, 1500);
-});
+// WORKING CONTACT FORM HANDLER
+const contactForm = document.querySelector('.contact-form');
+const formMessage = document.getElementById('form-message');
+const submitBtn = document.getElementById('submit-btn');
+const btnText = submitBtn.querySelector('.btn-text');
+const btnLoading = submitBtn.querySelector('.btn-loading');
+
+if (contactForm) {
+    contactForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // Show loading state
+        submitBtn.disabled = true;
+        btnText.textContent = 'Sending...';
+        btnLoading.style.display = 'inline-block';
+        formMessage.style.display = 'none';
+
+        // Get form data
+        const formData = new FormData(this);
+        
+        try {
+            // Submit to Web3Forms
+            const response = await fetch('https://api.web3forms.com/submit', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Success message
+                formMessage.innerHTML = '✅ Thank you! Your message has been sent successfully.';
+                formMessage.className = 'form-message success';
+                formMessage.style.display = 'block';
+                
+                // Reset form
+                this.reset();
+            } else {
+                throw new Error('Form submission failed');
+            }
+        } catch (error) {
+            // Error message
+            formMessage.innerHTML = '❌ Sorry, there was an error sending your message. Please try again.';
+            formMessage.className = 'form-message error';
+            formMessage.style.display = 'block';
+        } finally {
+            // Reset button state
+            submitBtn.disabled = false;
+            btnText.textContent = 'Send Message';
+            btnLoading.style.display = 'none';
+        }
+    });
+}
 
 // Add loading animation for project cards
 const projectCards = document.querySelectorAll('.project-card');
@@ -152,41 +167,6 @@ projectCards.forEach(card => {
     card.style.transform = 'translateY(50px)';
     card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
     cardObserver.observe(card);
-});
-
-// Parallax effect for home section
-window.addEventListener('scroll', () => {
-    const scrolled = window.pageYOffset;
-    const parallaxElements = document.querySelectorAll('.home');
-    
-    parallaxElements.forEach(element => {
-        const speed = 0.5;
-        element.style.transform = `translateY(${scrolled * speed}px)`;
-    });
-});
-
-// Add hover effects to social links
-document.querySelectorAll('.social-links a, .footer-social a').forEach(link => {
-    link.addEventListener('mouseenter', function() {
-        this.style.transform = 'translateY(-3px) scale(1.1)';
-    });
-    
-    link.addEventListener('mouseleave', function() {
-        this.style.transform = 'translateY(0) scale(1)';
-    });
-});
-
-// Initialize animations on page load
-window.addEventListener('load', () => {
-    // Add loaded class to body for CSS animations
-    document.body.classList.add('loaded');
-    
-    // Trigger entrance animations
-    const homeContent = document.querySelector('.home-content');
-    if (homeContent) {
-        homeContent.style.opacity = '1';
-        homeContent.style.transform = 'translateY(0)';
-    }
 });
 
 // Add scroll-to-top functionality
