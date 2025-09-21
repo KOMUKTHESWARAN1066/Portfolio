@@ -1,8 +1,9 @@
-// Portfolio JavaScript - Enhanced with Error Handling and Better Structure
+// Enhanced Portfolio JavaScript with Theme Toggle and Modern Features
 
 // Global variables
 let observer;
 let certificateManager;
+let currentTheme = 'light';
 
 // Initialize everything when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
@@ -13,6 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function initializePortfolio() {
     try {
         // Initialize all components
+        initThemeToggle();
         initMobileNavigation();
         initSmoothScrolling();
         initTypingAnimation();
@@ -22,6 +24,7 @@ function initializePortfolio() {
         initProjectCards();
         initScrollToTop();
         initCertificateManager();
+        initActiveNavigation();
         
         console.log('Portfolio initialized successfully');
     } catch (error) {
@@ -29,7 +32,61 @@ function initializePortfolio() {
     }
 }
 
-// Mobile Navigation Toggle
+// Theme Toggle Functionality
+function initThemeToggle() {
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeIcon = document.getElementById('theme-icon');
+    const body = document.body;
+    
+    if (!themeToggle || !themeIcon) {
+        console.warn('Theme toggle elements not found');
+        return;
+    }
+    
+    // Get saved theme or default to system preference
+    const savedTheme = localStorage.getItem('theme') || 
+        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    
+    // Apply saved theme
+    applyTheme(savedTheme);
+    
+    // Theme toggle click handler
+    themeToggle.addEventListener('click', () => {
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        applyTheme(newTheme);
+        localStorage.setItem('theme', newTheme);
+        
+        // Add click animation
+        themeToggle.style.transform = 'scale(0.9)';
+        setTimeout(() => {
+            themeToggle.style.transform = '';
+        }, 150);
+    });
+    
+    function applyTheme(theme) {
+        currentTheme = theme;
+        body.setAttribute('data-theme', theme);
+        
+        // Update icon with smooth transition
+        themeIcon.style.transform = 'scale(0)';
+        setTimeout(() => {
+            themeIcon.className = theme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+            themeIcon.style.transform = 'scale(1)';
+        }, 150);
+        
+        // Update navbar scroll behavior for theme
+        updateNavbarForTheme();
+    }
+    
+    // Listen for system theme changes
+    window.matchMedia('(prefers-color-scheme: dark)').addListener((e) => {
+        if (!localStorage.getItem('theme')) {
+            applyTheme(e.matches ? 'dark' : 'light');
+        }
+    });
+}
+
+// Enhanced Mobile Navigation
 function initMobileNavigation() {
     const navToggle = document.getElementById('nav-toggle');
     const navMenu = document.getElementById('nav-menu');
@@ -40,34 +97,82 @@ function initMobileNavigation() {
     }
 
     navToggle.addEventListener('click', () => {
+        const isActive = navMenu.classList.contains('active');
         navMenu.classList.toggle('active');
+        navToggle.classList.toggle('active');
+        
+        // Prevent body scroll when menu is open
+        document.body.style.overflow = isActive ? '' : 'hidden';
     });
 
     // Close mobile menu when clicking on a link
     document.querySelectorAll('.nav-link').forEach(link => {
         link.addEventListener('click', () => {
             navMenu.classList.remove('active');
+            navToggle.classList.remove('active');
+            document.body.style.overflow = '';
         });
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!navMenu.contains(e.target) && !navToggle.contains(e.target)) {
+            navMenu.classList.remove('active');
+            navToggle.classList.remove('active');
+            document.body.style.overflow = '';
+        }
     });
 }
 
-// Smooth scrolling for navigation links
+// Enhanced Smooth scrolling with active navigation
 function initSmoothScrolling() {
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
             e.preventDefault();
             const target = document.querySelector(this.getAttribute('href'));
             if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
+                const navbarHeight = document.querySelector('.navbar').offsetHeight;
+                const targetPosition = target.offsetTop - navbarHeight - 20;
+                
+                window.scrollTo({
+                    top: targetPosition,
+                    behavior: 'smooth'
                 });
             }
         });
     });
 }
 
-// Typing animation for home section
+// Active Navigation Highlighting
+function initActiveNavigation() {
+    const navLinks = document.querySelectorAll('.nav-link');
+    const sections = document.querySelectorAll('.section');
+    
+    if (sections.length === 0) return;
+    
+    const observerOptions = {
+        threshold: 0.3,
+        rootMargin: '-20% 0px -70% 0px'
+    };
+    
+    const navObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const sectionId = entry.target.id;
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === `#${sectionId}`) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+        });
+    }, observerOptions);
+    
+    sections.forEach(section => navObserver.observe(section));
+}
+
+// Enhanced Typing animation
 function initTypingAnimation() {
     const typingText = document.querySelector('.typing-text');
     if (!typingText) {
@@ -75,13 +180,20 @@ function initTypingAnimation() {
         return;
     }
 
-    const words = ['Data Analyst', 'Python Developer', 'Web Developer', 'Machine Learning Enthusiast'];
+    const words = [
+        'Data Analyst', 
+        'Python Developer', 
+        'Web Developer', 
+        'Machine Learning Enthusiast',
+        'Database Designer',
+        'Full Stack Developer'
+    ];
     let wordIndex = 0;
     let charIndex = 0;
     let isDeleting = false;
 
     function typeWriter() {
-        if (!typingText) return; // Safety check
+        if (!typingText) return;
         
         const currentWord = words[wordIndex];
         
@@ -108,7 +220,7 @@ function initTypingAnimation() {
     setTimeout(typeWriter, 1000);
 }
 
-// Animate skill bars when they come into view
+// Enhanced Skill bars animation
 function initSkillBars() {
     const skillsSection = document.querySelector('.skills');
     if (!skillsSection) {
@@ -125,10 +237,12 @@ function initSkillBars() {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 const skillBars = entry.target.querySelectorAll('.skill-progress');
-                skillBars.forEach(bar => {
+                skillBars.forEach((bar, index) => {
                     const width = bar.getAttribute('data-width');
                     if (width) {
-                        bar.style.width = width;
+                        setTimeout(() => {
+                            bar.style.width = width;
+                        }, index * 200);
                     }
                 });
             }
@@ -144,7 +258,7 @@ function initSkillBars() {
     }
 }
 
-// Navbar background change on scroll
+// Enhanced Navbar scroll with theme support
 function initNavbarScroll() {
     const navbar = document.querySelector('.navbar');
     if (!navbar) {
@@ -152,18 +266,45 @@ function initNavbarScroll() {
         return;
     }
 
+    let lastScrollTop = 0;
+    let isNavbarHidden = false;
+
     window.addEventListener('scroll', () => {
-        if (window.scrollY > 100) {
-            navbar.style.background = 'rgba(255, 255, 255, 0.98)';
-            navbar.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.1)';
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        
+        // Add scrolled class for styling
+        if (scrollTop > 100) {
+            navbar.classList.add('scrolled');
         } else {
-            navbar.style.background = 'rgba(255, 255, 255, 0.95)';
-            navbar.style.boxShadow = 'none';
+            navbar.classList.remove('scrolled');
         }
+        
+        // Hide/show navbar on scroll (optional)
+        if (scrollTop > lastScrollTop && scrollTop > 200 && !isNavbarHidden) {
+            // Scrolling down
+            navbar.style.transform = 'translateY(-100%)';
+            isNavbarHidden = true;
+        } else if (scrollTop < lastScrollTop && isNavbarHidden) {
+            // Scrolling up
+            navbar.style.transform = 'translateY(0)';
+            isNavbarHidden = false;
+        }
+        
+        lastScrollTop = scrollTop;
+        
+        // Update navbar theme
+        updateNavbarForTheme();
     });
 }
 
-// Contact form handler
+function updateNavbarForTheme() {
+    const navbar = document.querySelector('.navbar');
+    if (!navbar) return;
+    
+    // Additional theme-specific navbar updates can be added here
+}
+
+// Enhanced Contact form handler
 function initContactForm() {
     const contactForm = document.querySelector('.contact-form');
     if (!contactForm) {
@@ -188,6 +329,7 @@ function initContactForm() {
         try {
             // Show loading state
             submitBtn.disabled = true;
+            submitBtn.classList.add('loading');
             if (btnText) btnText.textContent = 'Sending...';
             if (btnLoading) btnLoading.style.display = 'inline-block';
             if (formMessage) formMessage.style.display = 'none';
@@ -204,11 +346,19 @@ function initContactForm() {
             const data = await response.json();
 
             if (data.success) {
-                // Success message
+                // Success message with animation
                 if (formMessage) {
-                    formMessage.innerHTML = '✅ Thank you! Your message has been sent successfully.';
+                    formMessage.innerHTML = '<i class="fas fa-check-circle"></i> Thank you! Your message has been sent successfully.';
                     formMessage.className = 'form-message success';
                     formMessage.style.display = 'block';
+                    
+                    // Animate success message
+                    setTimeout(() => {
+                        formMessage.style.transform = 'scale(1.05)';
+                        setTimeout(() => {
+                            formMessage.style.transform = 'scale(1)';
+                        }, 200);
+                    }, 100);
                 }
                 
                 // Reset form
@@ -219,7 +369,7 @@ function initContactForm() {
         } catch (error) {
             // Error message
             if (formMessage) {
-                formMessage.innerHTML = '❌ Sorry, there was an error sending your message. Please try again.';
+                formMessage.innerHTML = '<i class="fas fa-exclamation-circle"></i> Sorry, there was an error sending your message. Please try again.';
                 formMessage.className = 'form-message error';
                 formMessage.style.display = 'block';
             }
@@ -227,13 +377,14 @@ function initContactForm() {
         } finally {
             // Reset button state
             submitBtn.disabled = false;
+            submitBtn.classList.remove('loading');
             if (btnText) btnText.textContent = 'Send Message';
             if (btnLoading) btnLoading.style.display = 'none';
         }
     });
 }
 
-// Project cards animation
+// Enhanced Project cards animation
 function initProjectCards() {
     const projectCards = document.querySelectorAll('.project-card');
     if (projectCards.length === 0) {
@@ -242,13 +393,18 @@ function initProjectCards() {
     }
 
     const cardObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
+        entries.forEach((entry, index) => {
             if (entry.isIntersecting) {
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
+                setTimeout(() => {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }, index * 100);
             }
         });
-    }, { threshold: 0.1 });
+    }, { 
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    });
 
     projectCards.forEach(card => {
         card.style.opacity = '0';
@@ -258,11 +414,12 @@ function initProjectCards() {
     });
 }
 
-// Scroll to top functionality
+// Enhanced Scroll to top functionality
 function initScrollToTop() {
     const scrollToTopBtn = document.createElement('button');
     scrollToTopBtn.innerHTML = '<i class="fas fa-arrow-up"></i>';
     scrollToTopBtn.className = 'scroll-to-top';
+    scrollToTopBtn.setAttribute('aria-label', 'Scroll to top');
     scrollToTopBtn.style.cssText = `
         position: fixed;
         bottom: 30px;
@@ -270,25 +427,34 @@ function initScrollToTop() {
         width: 50px;
         height: 50px;
         border-radius: 50%;
-        background: #2563eb;
-        color: white;
+        background: var(--primary-color);
+        color: var(--text-inverse);
         border: none;
         cursor: pointer;
         opacity: 0;
         visibility: hidden;
-        transition: all 0.3s ease;
-        z-index: 1000;
+        transition: all var(--transition-normal);
+        z-index: 999;
+        box-shadow: var(--shadow-md);
     `;
 
     document.body.appendChild(scrollToTopBtn);
 
+    let isVisible = false;
+
     window.addEventListener('scroll', () => {
-        if (window.pageYOffset > 300) {
+        const shouldShow = window.pageYOffset > 300;
+        
+        if (shouldShow && !isVisible) {
             scrollToTopBtn.style.opacity = '1';
             scrollToTopBtn.style.visibility = 'visible';
-        } else {
+            scrollToTopBtn.style.transform = 'scale(1)';
+            isVisible = true;
+        } else if (!shouldShow && isVisible) {
             scrollToTopBtn.style.opacity = '0';
             scrollToTopBtn.style.visibility = 'hidden';
+            scrollToTopBtn.style.transform = 'scale(0.8)';
+            isVisible = false;
         }
     });
 
@@ -297,10 +463,16 @@ function initScrollToTop() {
             top: 0,
             behavior: 'smooth'
         });
+        
+        // Add click animation
+        scrollToTopBtn.style.transform = 'scale(0.9)';
+        setTimeout(() => {
+            scrollToTopBtn.style.transform = 'scale(1)';
+        }, 150);
     });
 }
 
-// Certificate Manager
+// Certificate Manager initialization
 function initCertificateManager() {
     const certificatesContainer = document.getElementById('certificates-grid');
     if (!certificatesContainer) {
@@ -311,7 +483,7 @@ function initCertificateManager() {
     certificateManager = new CertificateManager();
 }
 
-// Certificate Manager Class
+// Enhanced Certificate Manager Class
 class CertificateManager {
     constructor() {
         this.certificatesContainer = document.getElementById('certificates-grid');
@@ -322,6 +494,7 @@ class CertificateManager {
             return;
         }
         
+        console.log('Certificate Manager initialized, loading from:', this.configPath);
         this.init();
     }
 
@@ -329,50 +502,73 @@ class CertificateManager {
         try {
             await this.loadCertificates();
         } catch (error) {
-            this.showError('Failed to load certificates');
             console.error('Certificate loading error:', error);
+            this.showError('Failed to load certificates: ' + error.message);
         }
     }
 
     async loadCertificates() {
+        console.log('Attempting to fetch certificates from:', this.configPath);
+        
         try {
             const response = await fetch(this.configPath);
+            console.log('Fetch response status:', response.status);
+            console.log('Fetch response ok:', response.ok);
+            
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
             }
             
             const data = await response.json();
+            console.log('Certificates data loaded:', data);
+            
+            if (!data.certificates) {
+                throw new Error('No certificates array found in JSON data');
+            }
+            
             this.renderCertificates(data.certificates);
         } catch (error) {
-            // If config file doesn't exist, show empty state
-            this.showNoCertificates();
-            console.warn('No certificates config found:', error.message);
+            console.error('Error details:', error);
+            
+            if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                this.showError('Certificate config file not found. Please ensure certificates/certificates-config.json exists.');
+            } else if (error.name === 'SyntaxError') {
+                this.showError('Invalid JSON format in certificates config file.');
+            } else {
+                this.showNoCertificates();
+            }
         }
     }
 
     renderCertificates(certificates) {
+        console.log('Rendering certificates:', certificates.length);
+        
         if (!certificates || certificates.length === 0) {
             this.showNoCertificates();
             return;
         }
 
-        const certificatesHTML = certificates.map(cert => this.createCertificateCard(cert)).join('');
+        const certificatesHTML = certificates.map((cert, index) => {
+            console.log(`Processing certificate ${index + 1}:`, cert.name);
+            return this.createCertificateCard(cert);
+        }).join('');
+        
         this.certificatesContainer.innerHTML = certificatesHTML;
 
         // Add smooth reveal animation
         setTimeout(() => {
             const cards = this.certificatesContainer.querySelectorAll('.certificate-card');
+            console.log('Animating certificates:', cards.length);
             cards.forEach((card, index) => {
                 setTimeout(() => {
                     card.style.opacity = '1';
                     card.style.transform = 'translateY(0)';
-                }, index * 100);
+                }, index * 150);
             });
-        }, 100);
+        }, 200);
     }
 
     createCertificateCard(cert) {
-        // Validate required fields
         if (!cert.name || !cert.issuer) {
             console.warn('Certificate missing required fields:', cert);
             return '';
@@ -385,7 +581,7 @@ class CertificateManager {
             <div class="certificate-card">
                 <div class="certificate-image">
                     <img src="${this.escapeHtml(cert.image || '')}" alt="${this.escapeHtml(cert.name)}" 
-                         onerror="this.parentElement.innerHTML='<div style=\\'display:flex;align-items:center;justify-content:center;height:100%;color:white;font-size:3rem;\\'><i class=\\'fas fa-certificate\\'></i></div>'">
+                         onerror="this.parentElement.innerHTML='<div style=\\'display:flex;align-items:center;justify-content:center;height:100%;color:white;font-size:3rem;\\'><i class=\\'fas fa-certificate\\'></i></div>'; console.error('Failed to load certificate image:', '${cert.image}');">
                     <div class="certificate-overlay">
                         <div class="certificate-links">
                             <a href="${this.escapeHtml(cert.pdf || '#')}" target="_blank" class="cert-btn">
@@ -422,9 +618,9 @@ class CertificateManager {
     showNoCertificates() {
         this.certificatesContainer.innerHTML = `
             <div class="no-certificates">
-                <i class="fas fa-certificate" style="font-size: 3rem; color: #d1d5db; margin-bottom: 1rem;"></i>
-                <h3 style="color: #6b7280; margin-bottom: 0.5rem;">No Certificates Found</h3>
-                <p style="color: #9ca3af;">Add certificates to the certificates-config.json file to display them here.</p>
+                <i class="fas fa-certificate" style="font-size: 3rem; color: var(--text-tertiary); margin-bottom: 1rem;"></i>
+                <h3 style="color: var(--text-secondary); margin-bottom: 0.5rem;">No Certificates Found</h3>
+                <p style="color: var(--text-tertiary);">Please check if certificates/certificates-config.json file exists and contains valid certificate data.</p>
             </div>
         `;
     }
@@ -435,11 +631,13 @@ class CertificateManager {
                 <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 1rem;"></i>
                 <h3>Error Loading Certificates</h3>
                 <p>${this.escapeHtml(message)}</p>
+                <button onclick="certificateManager.refresh()" class="btn btn-primary" style="margin-top: 1rem;">
+                    <i class="fas fa-redo"></i> Try Again
+                </button>
             </div>
         `;
     }
 
-    // Method to refresh certificates (useful for development)
     async refresh() {
         if (!this.certificatesContainer) return;
         
@@ -453,9 +651,8 @@ class CertificateManager {
     }
 }
 
-// Global utility functions
+// Enhanced Global utility functions
 window.portfolioUtils = {
-    // Refresh certificates manually (for development)
     refreshCertificates() {
         if (certificateManager) {
             certificateManager.refresh();
@@ -464,13 +661,46 @@ window.portfolioUtils = {
         }
     },
     
-    // Get portfolio status
     getStatus() {
         return {
+            theme: currentTheme,
             certificateManager: !!certificateManager,
             observer: !!observer,
             contactForm: !!document.querySelector('.contact-form'),
-            skillsSection: !!document.querySelector('.skills')
+            skillsSection: !!document.querySelector('.skills'),
+            themeToggle: !!document.getElementById('theme-toggle')
         };
+    },
+    
+    setTheme(theme) {
+        if (theme === 'dark' || theme === 'light') {
+            document.body.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            currentTheme = theme;
+            console.log(`Theme changed to: ${theme}`);
+        } else {
+            console.error('Invalid theme. Use "light" or "dark".');
+        }
     }
 };
+
+// Performance optimization: Intersection Observer for animations
+const createAnimationObserver = (callback, options = {}) => {
+    const defaultOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+    
+    return new IntersectionObserver(callback, { ...defaultOptions, ...options });
+};
+
+// Console welcome message
+console.log(`
+🚀 Portfolio Loaded Successfully!
+👨‍💻 Developer: K E Komuktheswaran
+🌟 Theme: ${currentTheme}
+🛠️  Status: All systems operational
+
+Use portfolioUtils.getStatus() to check system status
+Use portfolioUtils.setTheme('dark') or portfolioUtils.setTheme('light') to change theme
+`);
