@@ -1,9 +1,9 @@
-// Enhanced Portfolio JavaScript with Theme Toggle and Modern Features
+// Enhanced Portfolio JavaScript with Fixed Progress Bars and Auto Theme Detection
 
 // Global variables
 let observer;
 let certificateManager;
-let currentTheme = 'light';
+let skillBarsAnimated = false; // Prevent multiple animations
 
 // Initialize everything when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function initializePortfolio() {
     try {
         // Initialize all components
-        initThemeToggle();
+        initAutoThemeDetection();
         initMobileNavigation();
         initSmoothScrolling();
         initTypingAnimation();
@@ -32,58 +32,23 @@ function initializePortfolio() {
     }
 }
 
-// Theme Toggle Functionality
-function initThemeToggle() {
-    const themeToggle = document.getElementById('theme-toggle');
-    const themeIcon = document.getElementById('theme-icon');
+// Automatic Theme Detection (No Manual Button) [web:368][web:371]
+function initAutoThemeDetection() {
     const body = document.body;
     
-    if (!themeToggle || !themeIcon) {
-        console.warn('Theme toggle elements not found');
-        return;
+    // Apply system theme automatically
+    function applySystemTheme() {
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        body.setAttribute('data-theme', systemPrefersDark ? 'dark' : 'light');
+        
+        console.log(`Auto theme applied: ${systemPrefersDark ? 'dark' : 'light'}`);
     }
     
-    // Get saved theme or default to system preference
-    const savedTheme = localStorage.getItem('theme') || 
-        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    // Apply theme on load
+    applySystemTheme();
     
-    // Apply saved theme
-    applyTheme(savedTheme);
-    
-    // Theme toggle click handler
-    themeToggle.addEventListener('click', () => {
-        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-        applyTheme(newTheme);
-        localStorage.setItem('theme', newTheme);
-        
-        // Add click animation
-        themeToggle.style.transform = 'scale(0.9)';
-        setTimeout(() => {
-            themeToggle.style.transform = '';
-        }, 150);
-    });
-    
-    function applyTheme(theme) {
-        currentTheme = theme;
-        body.setAttribute('data-theme', theme);
-        
-        // Update icon with smooth transition
-        themeIcon.style.transform = 'scale(0)';
-        setTimeout(() => {
-            themeIcon.className = theme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
-            themeIcon.style.transform = 'scale(1)';
-        }, 150);
-        
-        // Update navbar scroll behavior for theme
-        updateNavbarForTheme();
-    }
-    
-    // Listen for system theme changes
-    window.matchMedia('(prefers-color-scheme: dark)').addListener((e) => {
-        if (!localStorage.getItem('theme')) {
-            applyTheme(e.matches ? 'dark' : 'light');
-        }
-    });
+    // Listen for system theme changes [web:368]
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applySystemTheme);
 }
 
 // Enhanced Mobile Navigation
@@ -220,7 +185,7 @@ function initTypingAnimation() {
     setTimeout(typeWriter, 1000);
 }
 
-// Enhanced Skill bars animation
+// FIXED: Enhanced Skill bars animation [web:359][web:373][web:370]
 function initSkillBars() {
     const skillsSection = document.querySelector('.skills');
     if (!skillsSection) {
@@ -228,21 +193,37 @@ function initSkillBars() {
         return;
     }
 
+    // Fixed Observer Options for better desktop performance [web:370]
     const observerOptions = {
-        threshold: 0.5,
-        rootMargin: '0px 0px -100px 0px'
+        threshold: 0.3, // Reduced threshold for better desktop detection
+        rootMargin: '0px 0px -20% 0px' // Better margin for desktop
     };
 
     observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
-            if (entry.isIntersecting) {
+            if (entry.isIntersecting && !skillBarsAnimated) {
+                console.log('Skills section is visible, animating bars...');
+                skillBarsAnimated = true; // Prevent multiple animations
+                
                 const skillBars = entry.target.querySelectorAll('.skill-progress');
+                
                 skillBars.forEach((bar, index) => {
                     const width = bar.getAttribute('data-width');
                     if (width) {
+                        // Force reset first [web:359]
+                        bar.style.width = '0%';
+                        bar.style.transition = 'none';
+                        
+                        // Trigger reflow
+                        bar.offsetHeight;
+                        
+                        // Apply animation with staggered timing [web:373]
                         setTimeout(() => {
+                            bar.style.transition = 'width 2s cubic-bezier(0.4, 0, 0.2, 1)';
                             bar.style.width = width;
-                        }, index * 200);
+                            
+                            console.log(`Animating skill bar ${index + 1} to ${width}`);
+                        }, index * 300); // Increased delay for better effect
                     }
                 });
             }
@@ -258,7 +239,7 @@ function initSkillBars() {
     }
 }
 
-// Enhanced Navbar scroll with theme support
+// Enhanced Navbar scroll
 function initNavbarScroll() {
     const navbar = document.querySelector('.navbar');
     if (!navbar) {
@@ -291,17 +272,7 @@ function initNavbarScroll() {
         }
         
         lastScrollTop = scrollTop;
-        
-        // Update navbar theme
-        updateNavbarForTheme();
     });
-}
-
-function updateNavbarForTheme() {
-    const navbar = document.querySelector('.navbar');
-    if (!navbar) return;
-    
-    // Additional theme-specific navbar updates can be added here
 }
 
 // Enhanced Contact form handler
@@ -661,46 +632,35 @@ window.portfolioUtils = {
         }
     },
     
+    resetSkillBars() {
+        skillBarsAnimated = false;
+        const skillBars = document.querySelectorAll('.skill-progress');
+        skillBars.forEach(bar => {
+            bar.style.width = '0%';
+        });
+        console.log('Skill bars reset');
+    },
+    
     getStatus() {
+        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         return {
-            theme: currentTheme,
+            systemTheme: systemTheme,
             certificateManager: !!certificateManager,
             observer: !!observer,
             contactForm: !!document.querySelector('.contact-form'),
             skillsSection: !!document.querySelector('.skills'),
-            themeToggle: !!document.getElementById('theme-toggle')
+            skillBarsAnimated: skillBarsAnimated
         };
-    },
-    
-    setTheme(theme) {
-        if (theme === 'dark' || theme === 'light') {
-            document.body.setAttribute('data-theme', theme);
-            localStorage.setItem('theme', theme);
-            currentTheme = theme;
-            console.log(`Theme changed to: ${theme}`);
-        } else {
-            console.error('Invalid theme. Use "light" or "dark".');
-        }
     }
-};
-
-// Performance optimization: Intersection Observer for animations
-const createAnimationObserver = (callback, options = {}) => {
-    const defaultOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
-    
-    return new IntersectionObserver(callback, { ...defaultOptions, ...options });
 };
 
 // Console welcome message
 console.log(`
 🚀 Portfolio Loaded Successfully!
 👨‍💻 Developer: K E Komuktheswaran
-🌟 Theme: ${currentTheme}
+🌓 Auto Theme: Detecting system preference
 🛠️  Status: All systems operational
 
 Use portfolioUtils.getStatus() to check system status
-Use portfolioUtils.setTheme('dark') or portfolioUtils.setTheme('light') to change theme
+Use portfolioUtils.resetSkillBars() to reset skill animations
 `);
