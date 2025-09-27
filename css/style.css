@@ -922,6 +922,23 @@ body {
   gap: var(--space-md);
 }
 
+.slideshow-container {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  min-height: 180px;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.slideshow-container .slide {
+  display: none;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .btn-link {
   color: var(--primary-color);
   text-decoration: none;
