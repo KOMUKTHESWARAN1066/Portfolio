@@ -1,47 +1,20 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 
   <url>
     <loc>https://komuktheswaran1066.github.io/Portfolio/</loc>
-    <lastmod>2025-09-27T19:51:23+00:00</lastmod>
+    <lastmod>2025-09-28T04:12:20+00:00</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>1.00</priority>
-    <changefreq>monthly</changefreq>
-  </url>
-
-  <url>
-    <loc>https://komuktheswaran1066.github.io/Portfolio/#about</loc>
-    <priority>0.80</priority>
-    <changefreq>monthly</changefreq>
-  </url>
-
-  <url>
-    <loc>https://komuktheswaran1066.github.io/Portfolio/#skills</loc>
-    <priority>0.80</priority>
-    <changefreq>monthly</changefreq>
-  </url>
-
-  <url>
-    <loc>https://komuktheswaran1066.github.io/Portfolio/#projects</loc>
-    <priority>0.80</priority>
-    <changefreq>monthly</changefreq>
-  </url>
-
-  <url>
-    <loc>https://komuktheswaran1066.github.io/Portfolio/#certificates</loc>
-    <priority>0.70</priority>
-    <changefreq>monthly</changefreq>
-  </url>
-
-  <url>
-    <loc>https://komuktheswaran1066.github.io/Portfolio/#contact</loc>
-    <priority>0.70</priority>
-    <changefreq>monthly</changefreq>
   </url>
 
   <url>
     <loc>https://komuktheswaran1066.github.io/Portfolio/assets/documents/KOMUKTHESWARAN%20K%20E%20(3).pdf</loc>
-    <priority>0.50</priority>
+    <lastmod>2025-09-28T03:52:12+00:00</lastmod>
     <changefreq>yearly</changefreq>
+    <priority>0.80</priority>
   </url>
 
 </urlset>
